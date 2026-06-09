@@ -16,4 +16,9 @@ const me = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, data: user });
 });
 
-module.exports = { register, login, me };
+const refresh = asyncHandler(async (req, res) => {
+  const result = await authService.refreshTokens(req.body);
+  res.status(200).json({ success: true, data: result });
+});
+
+module.exports = { register, login, me, refresh };

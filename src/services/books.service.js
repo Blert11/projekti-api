@@ -1,5 +1,6 @@
 const { prisma } = require('../config/prisma');
 const ApiError = require('../utils/ApiError');
+const { invalidatePrefix } = require('../config/redis');
 
 const bookInclude = { author: true, category: true };
 
@@ -59,13 +60,15 @@ async function createBook(data) {
     if (!cat) throw ApiError.badRequest('Category not found');
   }
 
-  return prisma.book.create({
+  const book = await prisma.book.create({
     data: {
       ...data,
       availableCopies: data.totalCopies ?? 1,
     },
     include: bookInclude,
   });
+  await invalidatePrefix('books');
+  return book;
 }
 
 async function updateBook(id, data) {
@@ -76,11 +79,13 @@ async function updateBook(id, data) {
     });
     if (dup) throw ApiError.conflict('Another book with this ISBN already exists');
   }
-  return prisma.book.update({
+  const book = await prisma.book.update({
     where: { id: Number(id) },
     data,
     include: bookInclude,
   });
+  await invalidatePrefix('books');
+  return book;
 }
 
 async function deleteBook(id) {
@@ -92,6 +97,7 @@ async function deleteBook(id) {
     throw ApiError.conflict('Cannot delete a book with active loans');
   }
   await prisma.book.delete({ where: { id: Number(id) } });
+  await invalidatePrefix('books');
 }
 
 module.exports = { listBooks, getBookById, createBook, updateBook, deleteBook };

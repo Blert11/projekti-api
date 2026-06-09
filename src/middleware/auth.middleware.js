@@ -9,6 +9,9 @@ function authenticate(req, _res, next) {
   const token = header.slice(7);
   try {
     const payload = verifyToken(token);
+    if (payload.type === 'refresh' || payload.type === 'mfa_pending') {
+      return next(ApiError.unauthorized('Invalid or expired token'));
+    }
     req.user = { id: payload.sub, email: payload.email, role: payload.role };
     return next();
   } catch (err) {

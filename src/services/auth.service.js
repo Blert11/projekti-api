@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const { prisma } = require('../config/prisma');
 const config = require('../config/env');
-const { signAccessToken, signRefreshToken } = require('../utils/jwt');
+const { signAccessToken, signRefreshToken, signMfaToken, verifyToken } = require('../utils/jwt');
 const ApiError = require('../utils/ApiError');
 
 async function register({ email, password, name, phone, address }) {
@@ -31,6 +31,11 @@ async function login({ email, password }) {
   const ok = await bcrypt.compare(password, user.password);
   if (!ok) throw ApiError.unauthorized('Invalid email or password');
 
+  if (user.mfaEnabled) {
+    const mfaToken = signMfaToken({ sub: user.id, email: user.email, role: user.role });
+    return { requiresMfa: true, mfaToken };
+  }
+
   const tokenPayload = { sub: user.id, email: user.email, role: user.role };
   const accessToken = signAccessToken(tokenPayload);
   const refreshToken = signRefreshToken(tokenPayload);
@@ -47,10 +52,32 @@ async function getCurrentUser(userId) {
   return sanitize(user);
 }
 
+async function refreshTokens({ refreshToken }) {
+  let payload;
+  try {
+    payload = verifyToken(refreshToken);
+  } catch {
+    throw ApiError.unauthorized('Invalid or expired refresh token');
+  }
+
+  if (payload.type !== 'refresh') {
+    throw ApiError.unauthorized('Invalid refresh token');
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: payload.sub } });
+  if (!user) throw ApiError.unauthorized('User no longer exists');
+
+  const tokenPayload = { sub: user.id, email: user.email, role: user.role };
+  return {
+    accessToken: signAccessToken(tokenPayload),
+    refreshToken: signRefreshToken(tokenPayload),
+  };
+}
+
 function sanitize(user) {
   if (!user) return user;
-  const { password, ...rest } = user;
+  const { password, mfaSecret, ...rest } = user;
   return rest;
 }
 
-module.exports = { register, login, getCurrentUser };
+module.exports = { register, login, getCurrentUser, refreshTokens };

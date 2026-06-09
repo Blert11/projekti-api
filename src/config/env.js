@@ -22,4 +22,7 @@ module.exports = {
     max: parseInt(process.env.RATE_LIMIT_MAX, 10) || 100,
   },
   logLevel: process.env.LOG_LEVEL || 'info',
+  redis: {
+    url: process.env.REDIS_URL || null,
+  },
 };

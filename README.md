@@ -25,15 +25,17 @@ REST API ne **Node.js + Express** me **PostgreSQL + Prisma ORM** per menaxhimin 
 ## Karakteristikat
 
 - REST API i versionuar (`/api/v1`)
-- Autentifikim me **JWT** (access + refresh tokens)
+- Autentifikim me **JWT** (access + refresh tokens, me endpoint `/auth/refresh`)
+- **MFA (TOTP)** opsionale per perdorues — setup/enable/disable/verify me Google Authenticator
 - **RBAC** me 3 role: `ADMIN`, `LIBRARIAN`, `MEMBER`
 - Validim i input-it me `express-validator`
 - Sigurim me `helmet`, `cors`, **rate limiting**
+- **Caching me Redis** per endpoint-et e listave (books/authors/categories) me invalidim automatik
 - Dokumentacion interaktiv me **Swagger UI** ne `/api/docs`
 - Logim qendror me **Winston** (file + console)
 - Logjike biznesi per huazim/kthim me **transaksione** Prisma
 - Paginim & filtrim per liste-endpointet
-- **Docker** + **docker-compose** per Postgres + API
+- **Docker** + **docker-compose** per Postgres + Redis + API
 - **GitHub Actions** CI per test + build
 
 ## Stack teknologjik
@@ -45,6 +47,8 @@ REST API ne **Node.js + Express** me **PostgreSQL + Prisma ORM** per menaxhimin 
 | Databaza    | PostgreSQL 16                            |
 | ORM         | Prisma 6                                 |
 | Auth        | JSON Web Tokens (jsonwebtoken) + bcryptjs|
+| MFA         | speakeasy (TOTP) + qrcode                |
+| Caching     | Redis (ioredis)                          |
 | Validim     | express-validator                        |
 | Logim       | Winston + morgan                         |
 | Dokumentim  | swagger-jsdoc + swagger-ui-express       |
@@ -84,7 +88,18 @@ library-api/
 ### Parakushtet
 - Node.js 20+
 - Docker & Docker Compose
-- Porti `4000` (API) dhe `5434` (Postgres) duhet te jene te lire
+- Porti `4000` (API), `5434` (Postgres) dhe `6379` (Redis) duhet te jene te lire
+
+### Variabla shtese mjedisi (opsionale)
+
+```
+REDIS_URL=redis://localhost:6379   # nese mungon, caching shkyçet automatikisht (graceful fallback)
+```
+
+Pas ndryshimeve ne `prisma/schema.prisma` (fushat `mfaEnabled`/`mfaSecret`), duhet te krijohet nje migrim i ri:
+```bash
+npx prisma migrate dev --name add_mfa_fields
+```
 
 ### Hera e pare (3 komanda)
 
@@ -152,8 +167,21 @@ npm run dev
 | Metoda | Path        | Pershkrimi                  | Auth |
 |--------|-------------|-----------------------------|------|
 | POST   | `/register` | Regjistro nje anetar te ri  | —    |
-| POST   | `/login`    | Login + merr JWT            | —    |
+| POST   | `/login`    | Login + merr JWT (ose `requiresMfa: true`) | —    |
+| POST   | `/refresh`  | Merr access token te ri me refresh token | —    |
 | GET    | `/me`       | Merr perdoruesin aktual     | JWT  |
+
+### MFA (`/api/v1/mfa`)
+| Metoda | Path       | Pershkrimi                                          | Auth |
+|--------|------------|------------------------------------------------------|------|
+| POST   | `/setup`   | Gjeneron TOTP secret + QR code                       | JWT  |
+| POST   | `/enable`  | Konfirmon kodin TOTP dhe aktivizon MFA                | JWT  |
+| POST   | `/disable` | Ckaktivizon MFA (kerkon kod TOTP)                     | JWT  |
+| POST   | `/verify`  | Perfundon login-in me kodin TOTP (perdor `mfaToken`)  | —    |
+
+**Login flow me MFA:**
+1. `POST /auth/login` → nese `mfaEnabled = true`, kthen `{ requiresMfa: true, mfaToken }` (pa access/refresh tokens)
+2. `POST /mfa/verify` me `{ mfaToken, code }` → kthen `{ user, accessToken, refreshToken }`
 
 ### Books (`/api/v1/books`)
 | Metoda | Path         | Pershkrimi              | Roli           |
@@ -231,14 +259,14 @@ Triggers: `push` & `pull_request` ne `main` ose `develop`.
 | Seksioni i kerkesave           | Implementimi ne kete projekt                    |
 |---------------------------------|--------------------------------------------------|
 | 1. Arkitektura (REST, stateless)| Express + JWT (stateless), `/api/v1` versionim   |
-| 2. Siguria (JWT, RBAC, helmet)  | `auth.middleware.js`, `helmet`, rate limit, CORS |
-| 3. Performanca                  | Paginim, indekse Prisma, rate limit              |
+| 2. Siguria (JWT, RBAC, helmet, MFA) | `auth.middleware.js`, `helmet`, rate limit, CORS, MFA (TOTP) |
+| 3. Performanca (caching)        | Redis caching per liste, paginim, indekse Prisma, rate limit |
 | 4. Dokumentimi (OpenAPI)        | Swagger UI ne `/api/docs` (OAS 3.0.3)            |
 | 5. Versionimi                   | URL prefix `/api/v1`                             |
 | 6. Logim & monitoring           | Winston + morgan, logs/ folder                   |
 | 7. Integrimi DB                 | Prisma ORM + PostgreSQL                          |
 | 8. Standardet (SOLID, teste)    | Layered (routes/controllers/services), Jest     |
-| 9. Platformat                   | Node.js + Express + PostgreSQL + Redis-ready     |
+| 9. Platformat                   | Node.js + Express + PostgreSQL + Redis           |
 | 10. DevOps (Docker, CI/CD)      | Dockerfile, docker-compose, GitHub Actions       |
 
 ## Licenca

@@ -4,6 +4,7 @@ const { body, param } = require('express-validator');
 const ctrl = require('../../controllers/authors.controller');
 const validate = require('../../middleware/validate.middleware');
 const { authenticate, authorize } = require('../../middleware/auth.middleware');
+const { cacheMiddleware } = require('../../middleware/cache.middleware');
 
 const router = express.Router();
 
@@ -42,7 +43,7 @@ const updateRules = [
  *                       bio: { type: string, nullable: true }
  *                       createdAt: { type: string, format: date-time }
  */
-router.get('/', ctrl.list);
+router.get('/', cacheMiddleware('authors', 120), ctrl.list);
 
 /**
  * @openapi
@@ -59,7 +60,7 @@ router.get('/', ctrl.list);
  *       200: { description: Author found }
  *       404: { $ref: '#/components/responses/NotFound' }
  */
-router.get('/:id', validate(idParam), ctrl.get);
+router.get('/:id', validate(idParam), cacheMiddleware('authors', 300), ctrl.get);
 
 /**
  * @openapi

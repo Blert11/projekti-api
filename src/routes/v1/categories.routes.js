@@ -4,6 +4,7 @@ const { body, param } = require('express-validator');
 const ctrl = require('../../controllers/categories.controller');
 const validate = require('../../middleware/validate.middleware');
 const { authenticate, authorize } = require('../../middleware/auth.middleware');
+const { cacheMiddleware } = require('../../middleware/cache.middleware');
 
 const router = express.Router();
 
@@ -33,7 +34,7 @@ const nameRules = [body('name').trim().notEmpty().isLength({ max: 50 })];
  *                       id: { type: integer }
  *                       name: { type: string }
  */
-router.get('/', ctrl.list);
+router.get('/', cacheMiddleware('categories', 120), ctrl.list);
 
 /**
  * @openapi
@@ -50,7 +51,7 @@ router.get('/', ctrl.list);
  *       200: { description: Category found }
  *       404: { $ref: '#/components/responses/NotFound' }
  */
-router.get('/:id', validate(idParam), ctrl.get);
+router.get('/:id', validate(idParam), cacheMiddleware('categories', 300), ctrl.get);
 
 /**
  * @openapi

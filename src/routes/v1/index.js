@@ -1,6 +1,7 @@
 const express = require('express');
 const healthRoutes = require('./health.routes');
 const authRoutes = require('./auth.routes');
+const mfaRoutes = require('./mfa.routes');
 const booksRoutes = require('./books.routes');
 const authorsRoutes = require('./authors.routes');
 const categoriesRoutes = require('./categories.routes');
@@ -11,6 +12,7 @@ const router = express.Router();
 
 router.use('/health', healthRoutes);
 router.use('/auth', authRoutes);
+router.use('/mfa', mfaRoutes);
 router.use('/books', booksRoutes);
 router.use('/authors', authorsRoutes);
 router.use('/categories', categoriesRoutes);

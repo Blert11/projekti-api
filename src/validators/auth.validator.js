@@ -15,4 +15,8 @@ const loginRules = [
   body('password').notEmpty().withMessage('Password is required'),
 ];
 
-module.exports = { registerRules, loginRules };
+const refreshRules = [
+  body('refreshToken').notEmpty().withMessage('refreshToken is required').isString(),
+];
+
+module.exports = { registerRules, loginRules, refreshRules };

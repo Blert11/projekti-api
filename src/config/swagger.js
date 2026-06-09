@@ -17,6 +17,7 @@ const definition = {
   tags: [
     { name: 'Health', description: 'Service health checks' },
     { name: 'Auth', description: 'Authentication and registration' },
+    { name: 'MFA', description: 'Multi-factor authentication (TOTP)' },
     { name: 'Books', description: 'Book catalog management' },
     { name: 'Authors', description: 'Author management' },
     { name: 'Categories', description: 'Category management' },

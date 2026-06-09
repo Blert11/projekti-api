@@ -4,6 +4,7 @@ const ctrl = require('../../controllers/books.controller');
 const validate = require('../../middleware/validate.middleware');
 const { authenticate, authorize } = require('../../middleware/auth.middleware');
 const { idParam, listQuery, createRules, updateRules } = require('../../validators/book.validator');
+const { cacheMiddleware } = require('../../middleware/cache.middleware');
 
 const router = express.Router();
 
@@ -24,7 +25,7 @@ const router = express.Router();
  *       200:
  *         description: Paginated list of books
  */
-router.get('/', validate(listQuery), ctrl.list);
+router.get('/', validate(listQuery), cacheMiddleware('books', 120), ctrl.list);
 
 /**
  * @openapi
@@ -44,7 +45,7 @@ router.get('/', validate(listQuery), ctrl.list);
  *       404:
  *         $ref: '#/components/responses/NotFound'
  */
-router.get('/:id', validate(idParam), ctrl.get);
+router.get('/:id', validate(idParam), cacheMiddleware('books', 300), ctrl.get);
 
 /**
  * @openapi

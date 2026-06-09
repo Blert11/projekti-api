@@ -14,9 +14,9 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "db:seed": "node prisma/seed.js",
-    "db:up": "docker compose up -d postgres && bash -c 'until docker exec library-postgres pg_isready -U library -d library_db >/dev/null 2>&1; do sleep 1; done && echo Postgres ready'",
-    "db:down": "docker compose stop postgres",
-    "db:reset": "npm run db:down && docker compose rm -f postgres && docker volume rm library-api_library_pgdata 2>/dev/null; npm run setup",
+    "db:up": "docker compose up -d postgres redis && bash -c 'until docker exec library-postgres pg_isready -U library -d library_db >/dev/null 2>&1; do sleep 1; done && echo Postgres ready'",
+    "db:down": "docker compose stop postgres redis",
+    "db:reset": "npm run db:down && docker compose rm -f postgres redis && docker volume rm library-api_library_pgdata 2>/dev/null; npm run setup",
     "setup": "npm run db:up && npx prisma migrate deploy && npm run db:seed && echo '\\nSetup OK. Run: npm run dev\\n'"
   },
   "prisma": {
@@ -39,8 +39,11 @@
     "express-rate-limit": "^8.5.0",
     "express-validator": "^7.3.2",
     "helmet": "^8.1.0",
+    "ioredis": "^5.11.1",
     "jsonwebtoken": "^9.0.3",
     "morgan": "^1.10.1",
+    "qrcode": "^1.5.4",
+    "speakeasy": "^2.0.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "winston": "^3.19.0"

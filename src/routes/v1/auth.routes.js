@@ -4,7 +4,7 @@ const rateLimit = require('express-rate-limit');
 const authController = require('../../controllers/auth.controller');
 const validate = require('../../middleware/validate.middleware');
 const { authenticate } = require('../../middleware/auth.middleware');
-const { registerRules, loginRules } = require('../../validators/auth.validator');
+const { registerRules, loginRules, refreshRules } = require('../../validators/auth.validator');
 
 const router = express.Router();
 
@@ -87,5 +87,39 @@ router.post('/login', authLimiter, validate(loginRules), authController.login);
  *       401: { $ref: '#/components/responses/Unauthorized' }
  */
 router.get('/me', authenticate, authController.me);
+
+/**
+ * @openapi
+ * /api/v1/auth/refresh:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Refresh access token using a refresh token
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [refreshToken]
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: New token pair issued
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     accessToken: { type: string }
+ *                     refreshToken: { type: string }
+ *       401: { description: 'Invalid or expired refresh token' }
+ */
+router.post('/refresh', authLimiter, validate(refreshRules), authController.refresh);
 
 module.exports = router;
