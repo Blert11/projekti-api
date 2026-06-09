@@ -1,0 +1,56 @@
+{
+  "name": "library-api",
+  "version": "1.0.0",
+  "description": "Sistem Bibliotekash - REST API per kursin SPDD",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "jest --runInBand",
+    "test:watch": "jest --watch",
+    "lint": "eslint src/**/*.js",
+    "format": "prettier --write \"src/**/*.js\"",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio",
+    "db:seed": "node prisma/seed.js",
+    "db:up": "docker compose up -d postgres && bash -c 'until docker exec library-postgres pg_isready -U library -d library_db >/dev/null 2>&1; do sleep 1; done && echo Postgres ready'",
+    "db:down": "docker compose stop postgres",
+    "db:reset": "npm run db:down && docker compose rm -f postgres && docker volume rm library-api_library_pgdata 2>/dev/null; npm run setup",
+    "setup": "npm run db:up && npx prisma migrate deploy && npm run db:seed && echo '\\nSetup OK. Run: npm run dev\\n'"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
+  "keywords": [
+    "library",
+    "rest-api",
+    "express",
+    "spdd"
+  ],
+  "author": "GrupiX",
+  "license": "MIT",
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.5.0",
+    "express-validator": "^7.3.2",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "winston": "^3.19.0"
+  },
+  "devDependencies": {
+    "eslint": "^10.3.0",
+    "jest": "^30.3.0",
+    "nodemon": "^3.1.14",
+    "prettier": "^3.8.3",
+    "prisma": "^6.19.3",
+    "supertest": "^7.2.2"
+  }
+}

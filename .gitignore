@@ -1,0 +1,12 @@
+node_modules/
+.env
+.env.local
+*.log
+logs/
+coverage/
+.DS_Store
+dist/
+build/
+prisma/migrations/
+*.sqlite
+*.sqlite-journal

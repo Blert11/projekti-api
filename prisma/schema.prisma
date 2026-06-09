@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  LIBRARIAN
+  MEMBER
+}
+
+enum LoanStatus {
+  ACTIVE
+  RETURNED
+  OVERDUE
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(MEMBER)
+  member    Member?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Author {
+  id        Int      @id @default(autoincrement())
+  name      String
+  bio       String?
+  books     Book[]
+  createdAt DateTime @default(now())
+
+  @@map("authors")
+}
+
+model Category {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  books Book[]
+
+  @@map("categories")
+}
+
+model Book {
+  id              Int       @id @default(autoincrement())
+  title           String
+  isbn            String    @unique
+  description     String?
+  publishedYear   Int?
+  totalCopies     Int       @default(1)
+  availableCopies Int       @default(1)
+  authorId        Int
+  author          Author    @relation(fields: [authorId], references: [id])
+  categoryId      Int?
+  category        Category? @relation(fields: [categoryId], references: [id])
+  loans           Loan[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([title])
+  @@index([authorId])
+  @@map("books")
+}
+
+model Member {
+  id             Int      @id @default(autoincrement())
+  userId         Int      @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phone          String?
+  address        String?
+  membershipDate DateTime @default(now())
+  loans          Loan[]
+
+  @@map("members")
+}
+
+model Loan {
+  id         Int        @id @default(autoincrement())
+  bookId     Int
+  book       Book       @relation(fields: [bookId], references: [id])
+  memberId   Int
+  member     Member     @relation(fields: [memberId], references: [id])
+  loanDate   DateTime   @default(now())
+  dueDate    DateTime
+  returnDate DateTime?
+  status     LoanStatus @default(ACTIVE)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@index([memberId])
+  @@index([bookId])
+  @@index([status])
+  @@map("loans")
+}
