@@ -19,7 +19,13 @@
       "Bash(curl -s -X POST http://localhost:4000/api/v1/mfa/setup -H 'Authorization: Bearer __TRACKED_VAR__')",
       "Bash(node -e ' *)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:4000/api/v1/health)",
-      "Bash(npm create *)"
+      "Bash(npm create *)",
+      "Bash(find .github -type f)",
+      "Bash(ls docker-compose*.yml)",
+      "Bash(cat docker-compose.yml)",
+      "Bash(grep -rn \"dotenv\" src/ tests/)",
+      "Bash(grep \"DATABASE_URL\" .env)",
+      "Bash(DATABASE_URL=\"postgresql://library:library@localhost:9999/library_test_db?schema=public\" npm test)"
     ]
   }
 }
