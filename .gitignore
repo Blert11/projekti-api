@@ -7,6 +7,5 @@ coverage/
 .DS_Store
 dist/
 build/
-prisma/migrations/
 *.sqlite
 *.sqlite-journal
