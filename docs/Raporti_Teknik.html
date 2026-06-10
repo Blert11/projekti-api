@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="UTF-8">
+<title>Raporti Teknik i Projektit</title>
+<style>
+@page { size: A4; margin: 2.2cm; }
+body { font-family: Calibri, Arial, sans-serif; font-size: 11.5pt; line-height: 1.4; color: #1a1a1a; }
+h1 { font-size: 22pt; text-align: center; margin-top: 0.5em; }
+h2 { font-size: 16pt; border-bottom: 1px solid #999; padding-bottom: 4px; margin-top: 1.6em; page-break-before: always; }
+h3 { font-size: 13pt; margin-top: 1.2em; }
+h4 { font-size: 11.5pt; margin-top: 1em; }
+table { border-collapse: collapse; width: 100%; margin: 0.8em 0; font-size: 10pt; }
+th, td { border: 1px solid #888; padding: 4px 6px; text-align: left; vertical-align: top; }
+th { background: #e8e8e8; }
+pre { background: #f5f5f5; border: 1px solid #ccc; padding: 8px; font-family: "Courier New", monospace; font-size: 9pt; line-height: 1.25; white-space: pre; overflow-x: auto; }
+code { font-family: "Courier New", monospace; background: #f0f0f0; padding: 0 2px; }
+blockquote { border-left: 3px solid #aaa; margin-left: 0; padding-left: 12px; color: #444; font-style: italic; }
+.note { background: #fff8d6; border: 1px solid #e0c200; padding: 10px 14px; margin-bottom: 1.5em; font-size: 10pt; }
+.page-break { page-break-before: always; }
+hr { border: none; border-top: 1px solid #ccc; margin: 1.5em 0; }
+</style>
+</head>
+<body>
+<div class="note"><strong>SHENIM PER STUDENTIN (fshije kete kuti para dorezimit):</strong><ul><li>1) Plotesoji fushat [SHENO: ...] me te dhenat e tua (universiteti, grupi, anetaret, data).</li><li>2) Hap docs/Raporti_Teknik.html ne Word ("File &gt; Open" -&gt; zgjidh .html) dhe bej "Save As" -&gt; .docx.</li><li>3) Shto ekran-pamje (screenshots) reale nga Swagger UI dhe nga aplikacioni frontend ne Shtojce (9.5).</li><li>4) Lexoje deklaraten e origjinalitetit dhe nenshkruaje (emer + date).</li><li>5) Riemerto file-in .docx dhe .zip sipas konvencionit te kerkuar nga lenda</li></ul></div>
+<h1>Raporti Teknik i Projektit</h1>
+<p><strong>Tema:</strong> Sistem per Menaxhimin e Bibliotekes — REST API &amp; Aplikacion Web <strong>Lenda:</strong> Sherbime Web dhe API-Web (SPDD) <strong>Profesori:</strong> Prof.ass.Dr.sc. Liridon Hoti <strong>Universiteti / Fakulteti:</strong> [SHENO: emrin e universitetit/fakultetit] <strong>Studenti / Grupi:</strong> [SHENO: emrin/emrat e anetareve te grupit] <strong>Viti akademik:</strong> [SHENO: p.sh. 2025/2026] <strong>Data e dorezimit:</strong> [SHENO: p.sh. 10.06.2026]</p>
+<div class="page-break"></div>
+<h2>Deklarata e origjinalitetit</h2>
+<p>Une/ne, i/e nenshkruari/i nenshkruari me poshte, deklaroj/deklarojme se ky projekt dhe ky raport jane punuar nga vete une/ne, ne kuader te lendes <strong>Sherbime Web dhe API-Web (SPDD)</strong>. Krejt kodi burimor, dizajni i sistemit dhe ky dokument jane rezultat i punes sime/tone, perpos pjeseve te shenuara shprehimisht si te marra nga burime te jashtme (libraritë/paketat e perdorura, te listuara ne Kapitullin 8 — Referencat). Jam/jemi te vetedijshem se cdo shkelje e ketij parimi (plagjiature) trajtohet sipas rregullores se Universitetit.</p>
+<p><strong>Emri Mbiemri:</strong> [SHENO] <strong>Data:</strong> [SHENO] <strong>Nenshkrimi:</strong> [SHENO]</p>
+<div class="page-break"></div>
+<h2>Permbajtja</h2>
+<ol>
+<li>Abstrakt</li>
+<li>Objektivat</li>
+<li>Analiza e kerkesave funksionale dhe jo-funksionale</li>
+<li>Dizajni i sistemit</li>
+<li>Pershkrimi i implementimit</li>
+<li>Testimi dhe rezultatet</li>
+<li>Konkluzione</li>
+<li>Referencat</li>
+<li>Shtojca</li>
+</ol>
+<div class="page-break"></div>
+<h2>1. Abstrakt</h2>
+<p>Ky projekt implementon nje <strong>sistem per menaxhimin e nje biblioteke</strong>, i ndertuar si nje <strong>REST API</strong> e versionuar (<code>/api/v1</code>) ne <strong>Node.js + Express 5</strong>, me <strong>PostgreSQL</strong> si databaze relacionale dhe <strong>Prisma ORM</strong> per qasje ne te dhena, te shoqeruar nga nje <strong>aplikacion web (frontend)</strong> i ndertuar me <strong>React + Vite</strong> qe konsumon kete API.</p>
+<p>Sistemi mundeson regjistrimin dhe identifikimin e perdoruesve me <strong>JWT</strong> (access + refresh tokens), <strong>autentifikim me dy faktore (MFA/TOTP)</strong> opsional, dhe <strong>kontroll te aksesit te bazuar ne role</strong> (RBAC) per tre role: <code>ADMIN</code>, <code>LIBRARIAN</code> dhe <code>MEMBER</code>. Mbeshtet operacione CRUD per libra, autore, kategori dhe anetare, si dhe logjiken e biznesit per <strong>huazim/kthim librash</strong> (me transaksione databaze qe garantojne konsistence).</p>
+<p>Per performance, listat (libra/autore/kategori) cache-ohen me <strong>Redis</strong> dhe invalidohen automatikisht pas cdo modifikimi. Per siguri, perdoren <code>helmet</code>, <code>cors</code>, <strong>rate limiting</strong>, validim i rrepte i input-it (<code>express-validator</code>), dhe nje <strong>audit log</strong> i dedikuar (<code>logs/audit.log</code>) qe regjistron veprimet e ndjeshme (login, MFA, CRUD mbi resurse) per qellime sigurie dhe gjurmueshmerie.</p>
+<p>Projekti perfshin <strong>dokumentim interaktiv OpenAPI/Swagger</strong>, nje <strong>suite testesh automatike</strong> prej <strong>116 testesh</strong> (njesi + integrim) me Jest/Supertest, <strong>ESLint + Prettier</strong> per standarde kodimi, dhe eshte i <strong>konteinerizuar</strong> me Docker/Docker Compose, me nje <strong>pipeline CI/CD</strong> ne GitHub Actions qe ekzekuton lint, migrime, teste dhe build-in e imazhit Docker ne cdo push/PR.</p>
+<div class="page-break"></div>
+<h2>2. Objektivat</h2>
+<h3>2.1 Objektivi i pergjithshem</h3>
+<p>Te dizajnohet, implementohet dhe testohet nje <strong>Web API RESTful e plote dhe e sigurte</strong>, sipas kerkesave teknike te lendes "Sherbime Web dhe API-Web", per nje domen real (menaxhimi i nje biblioteke), e shoqeruar nga nje aplikacion web qe e konsumon ate API.</p>
+<h3>2.2 Objektivat specifike</h3>
+<ul>
+<li>Te projektohet nje <strong>arkitekture e shtresuar</strong> (routes → controllers → services → ORM/DB), e ndare sipas parimeve <strong>SOLID</strong> dhe me pergjegjesi te qarta per cdo shtrese.</li>
+<li>Te implementohet <strong>autentifikim dhe autorizim</strong> i sigurte: JWT (access/refresh), hashing i fjalekalimeve me bcrypt, RBAC me tre role, dhe <strong>MFA (TOTP)</strong> opsionale.</li>
+<li>Te zbatohen <strong>masat e sigurise</strong> te rekomanduara (helmet, CORS, rate limiting, validim input-i, audit logging per veprime te ndjeshme).</li>
+<li>Te optimizohet <strong>performanca</strong> permes <strong>cache-imit me Redis</strong>, paginimit dhe indekseve ne databaze.</li>
+<li>Te dokumentohet API-ja sipas standardit <strong>OpenAPI 3.0</strong> (Swagger UI).</li>
+<li>Te versionohet API-ja (<code>/api/v1</code>) per te lejuar evolim te ardhshem pa thyer klientet ekzistues.</li>
+<li>Te implementohet <strong>logim qendror</strong> (Winston) per debug/monitorim dhe <strong>audit log</strong> i vecante per siguri.</li>
+<li>Te shkruhen <strong>teste automatike</strong> (njesi + integrim) qe mbulojne logjiken kryesore te biznesit dhe endpoint-et publike.</li>
+<li>Te konteinerizohet aplikacioni (Docker/Docker Compose) dhe te ngrihet nje <strong>pipeline CI/CD</strong> (GitHub Actions) per integrim te vazhdueshem.</li>
+<li>Te ndertohet nje <strong>klient web (React)</strong> funksional qe demonstron perdorimin e plote te API-se (autentifikim, CRUD, huazime, MFA, role te ndryshme).</li>
+</ul>
+<div class="page-break"></div>
+<h2>3. Analiza e kerkesave funksionale dhe jo-funksionale</h2>
+<h3>3.1 Kerkesat funksionale</h3>
+<table><thead><tr><th>ID</th><th>Kerkesa</th><th>Aktoret</th></tr></thead><tbody><tr><td>RF-01</td><td>Regjistrimi i nje perdoruesi te ri (rol automatik <code>MEMBER</code>)</td><td>Vizitor</td></tr><tr><td>RF-02</td><td>Identifikimi (login) me email/fjalekalim, kthim i JWT (access+refresh)</td><td>Te gjithe</td></tr><tr><td>RF-03</td><td>Identifikim me dy faktore (MFA/TOTP): setup, enable, disable, verify</td><td>Perdoruesi i loguar</td></tr><tr><td>RF-04</td><td>Rifreskimi i access token-it permes refresh token-it</td><td>Te gjithe</td></tr><tr><td>RF-05</td><td>Shikimi i te dhenave te llogarise vetjake (<code>/auth/me</code>, <code>/members/me</code>)</td><td>Perdoruesi i loguar</td></tr><tr><td>RF-06</td><td>CRUD per <strong>Libra</strong> (krijim/perditesim nga ADMIN/LIBRARIAN, fshirje vetem ADMIN, lexim publik)</td><td>ADMIN, LIBRARIAN, te gjithe</td></tr><tr><td>RF-07</td><td>CRUD per <strong>Autore</strong> (krijim/perditesim ADMIN/LIBRARIAN, fshirje ADMIN, lexim publik)</td><td>ADMIN, LIBRARIAN, te gjithe</td></tr><tr><td>RF-08</td><td>CRUD per <strong>Kategori</strong> (njesoj si autoret, me emer unik)</td><td>ADMIN, LIBRARIAN, te gjithe</td></tr><tr><td>RF-09</td><td>Menaxhimi i <strong>Anetareve</strong>: liste/kerkim (ADMIN/LIBRARIAN), shikim/perditesim profili vetjak ose nga ADMIN/LIBRARIAN, fshirje (ADMIN)</td><td>ADMIN, LIBRARIAN, MEMBER</td></tr><tr><td>RF-10</td><td><strong>Huazimi</strong> i nje libri nga nje anetar (ose ne emer te tij nga ADMIN/LIBRARIAN), me kontroll te kopjeve te disponueshme</td><td>MEMBER, ADMIN, LIBRARIAN</td></tr><tr><td>RF-11</td><td><strong>Kthimi</strong> i nje libri te huazuar, me rivendosje te kopjeve te disponueshme</td><td>Pronari i huazimit, ADMIN, LIBRARIAN</td></tr><tr><td>RF-12</td><td>Shenimi automatik i huazimeve te skaduara si <code>OVERDUE</code> (<code>/loans/mark-overdue</code>)</td><td>ADMIN, LIBRARIAN</td></tr><tr><td>RF-13</td><td>Paginim, kerkim dhe filtrim per listat (libra, anetare, huazime)</td><td>Te gjithe</td></tr><tr><td>RF-14</td><td>Pengimi i fshirjes se nje autori/kategorie/libri/anetari qe ka regjistrime te lidhura aktive (libra, huazime aktive)</td><td>ADMIN</td></tr><tr><td>RF-15</td><td>Audit log per veprimet e ndjeshme (login, MFA, CRUD mbi books/authors/categories/members/loans)</td><td>Sistemi</td></tr></tbody></table>
+<h3>3.2 Kerkesat jo-funksionale</h3>
+<table><thead><tr><th>Kategoria</th><th>Kerkesa dhe implementimi</th></tr></thead><tbody><tr><td><strong>Siguria</strong></td><td>Hashing fjalekalimesh me <code>bcryptjs</code>; token-a JWT te nenshkruar (HS256) me kohe skadence te ndara per access/refresh/MFA-pending; RBAC me middleware <code>authorize(...roles)</code>; <code>helmet</code> per HTTP headers te sigurt; <code>cors</code>; <strong>rate limiting</strong> (max kerkesa/15min); validim i rrepte i input-it me <code>express-validator</code>; <strong>audit log</strong> i izoluar (<code>logs/audit.log</code>, format JSON) qe nuk perzihet me log-un e aplikacionit.</td></tr><tr><td><strong>Performanca</strong></td><td><strong>Redis cache</strong> per endpoint-et e listave/detajeve te librave, autoreve, kategorive (TTL 120-300s), me invalidim automatik ne cdo <code>create/update/delete</code>; paginim (<code>page</code>, <code>limit</code>) per te gjitha listat; indekse ne Prisma schema (<code>@@index</code>) per fushat me kerkim te shpeshte (<code>title</code>, <code>authorId</code>, <code>memberId</code>, <code>bookId</code>, <code>status</code>).</td></tr><tr><td><strong>Skalabiliteti / Mirembajtja</strong></td><td>Arkitekture e shtresuar (routes/controllers/services), kod i organizuar sipas pergjegjesise se vetme (SOLID-SRP); <code>asyncHandler</code> per trajtim uniform te gabimeve async; Prisma migrations per evolimin e skemes pa humbje te dhenash.</td></tr><tr><td><strong>Disponueshmeria / Qendrueshmeria</strong></td><td><code>Dockerfile</code> me <code>HEALTHCHECK</code>; <code>docker-compose.yml</code> me healthcheck per Postgres/Redis dhe <code>depends_on: condition: service_healthy</code>; trajtim global i gabimeve (<code>error.middleware.js</code>) me kode HTTP standarde dhe pergjigje JSON konsistente.</td></tr><tr><td><strong>Dokumentueshmeria</strong></td><td>OpenAPI 3.0.3 i gjeneruar nga <code>swagger-jsdoc</code>, i shfaqur ne <code>/api/docs</code> me Swagger UI; README dhe udhezues hap-pas-hapi (<code>UDHEZUES.md</code>) per instalim/ekzekutim.</td></tr><tr><td><strong>Testueshmeria</strong></td><td>116 teste automatike (Jest + Supertest): teste njesie per util-e dhe shtresen e sherbimeve (me mock te Prisma), dhe teste integrimi qe ekzekutojne API-ne e plote kunder nje databaze reale PostgreSQL te dedikuar per teste.</td></tr><tr><td><strong>Portabiliteti / Versionimi</strong></td><td>API e versionuar (<code>/api/v1</code>) per kompatibilitet prapavajtes; aplikacion i konteinerizuar (Docker), i ekzekutueshem ne cdo OS qe mbeshtet Docker; konfigurim permes variablave te mjedisit (<code>.env</code>).</td></tr><tr><td><strong>Auditueshmeria</strong></td><td>Cdo veprim i ndjeshem (login i suksesshem/i deshtuar, refresh, setup/enable/disable/verify MFA, krijim/perditesim/fshirje per books/authors/categories/members/loans, huazim/kthim/mark-overdue) regjistrohet me: <code>userId</code>, <code>email</code>, <code>role</code>, <code>ip</code>, <code>action</code>, <code>outcome</code>, <code>resource</code>, <code>resourceId</code>, <code>meta</code>/<code>reason</code>.</td></tr></tbody></table>
+<div class="page-break"></div>
+<h2>4. Dizajni i sistemit</h2>
+<h3>4.1 Arkitektura e pergjithshme</h3>
+<pre>┌──────────────────────┐        HTTPS/JSON        ┌────────────────────────────────────────────┐
+│   Frontend (SPA)      │ ────────────────────────▶ │              Backend API (Node)              │
+│   React + Vite         │                           │            Express 5  —  /api/v1             │
+│   - Login/Register      │                          │                                              │
+│   - Books/Authors/      │ ◀──────────────────────  │  ┌─────────┐   ┌─────────────┐   ┌─────────┐ │
+│     Categories/Members  │                          │  │ Routes  │──▶│ Controllers │──▶│ Services│ │
+│   - Loans / Profile     │                          │  └─────────┘   └─────────────┘   └────┬────┘ │
+│   - Dashboard            │                         │                                          │      │
+└──────────────────────┘                            │  Middleware: helmet, cors, rate-limit,   │      │
+                                                       │  JWT auth (authenticate/authorize),      │      │
+                                                       │  express-validator, cache, audit log     │      │
+                                                       └───────────────────┬───────────────────┘
+                                                                            │
+                              ┌─────────────────────────────┬──────────────┴───────────────┬───────────────────────┐
+                              ▼                             ▼                              ▼
+                     ┌──────────────────┐          ┌──────────────────┐          ┌────────────────────────┐
+                     │   PostgreSQL 16    │          │     Redis 7        │          │   logs/ (Winston)       │
+                     │   (Prisma ORM)     │          │  (cache i listave)  │          │  app + error + audit    │
+                     └──────────────────┘          └──────────────────┘          └────────────────────────┘</pre>
+<h3>4.2 Modeli i te dhenave (ER — entitet/relacione)</h3>
+<pre> ┌────────────┐  1      1  ┌────────────┐
+ │   User      │───────────│   Member    │
+ │ id          │           │ id          │
+ │ email (uniq)│           │ userId (FK) │
+ │ password    │           │ phone       │
+ │ name        │           │ address     │
+ │ role        │           │ membershipDt│
+ │ mfaEnabled  │           └─────┬──────┘
+ │ mfaSecret   │                 │ 1
+ └────────────┘                 │
+                                  │ N
+                           ┌─────┴──────┐        N        1  ┌────────────┐
+                           │    Loan     │──────────────────▶│    Book     │
+                           │ id          │                    │ id          │
+                           │ bookId (FK) │                    │ title       │
+                           │ memberId(FK)│                    │ isbn (uniq) │
+                           │ loanDate    │                    │ totalCopies │
+                           │ dueDate     │                    │ availableCop│
+                           │ returnDate  │                    │ authorId(FK)│
+                           │ status      │                    │ categoryId  │
+                           └────────────┘                    └──────┬─────┘
+                                                                      │ N        1
+                                                          ┌───────────┴──┐  ┌─────────────┐
+                                                          │    Author     │  │  Category    │
+                                                          │ id            │  │ id           │
+                                                          │ name          │  │ name (uniq)  │
+                                                          │ bio           │  └─────────────┘
+                                                          └──────────────┘</pre>
+<p>Relacionet kryesore (te perkufizuara ne <code>prisma/schema.prisma</code>):</p>
+<ul>
+<li><strong>User 1—1 Member</strong>: cdo perdorues me rol <code>MEMBER</code> ka nje profil <code>Member</code> (telefon, adrese, data e anetaresimit). Fshirja e <code>User</code> shkakton <code>onDelete: Cascade</code> te <code>Member</code>.</li>
+<li><strong>Author 1—N Book</strong>, <strong>Category 1—N Book</strong> (categoria opsionale: <code>categoryId Int?</code>).</li>
+<li><strong>Member 1—N Loan</strong>, <strong>Book 1—N Loan</strong>.</li>
+<li><code>LoanStatus</code> enum: <code>ACTIVE | RETURNED | OVERDUE</code>.</li>
+<li><code>Role</code> enum: <code>ADMIN | LIBRARIAN | MEMBER</code>.</li>
+</ul>
+<h3>4.3 Rrjedha e identifikimit (sequence — Login + MFA)</h3>
+<pre>Klienti                     API (Express)                    DB (Postgres)
+   │  POST /api/v1/auth/login                                       │
+   │ ───────────────────────────▶                                    │
+   │                              │  user = findUnique({email})       │
+   │                              │ ──────────────────────────────────▶
+   │                              │ ◀──────────────────────────────────
+   │                              │  bcrypt.compare(pass, user.password)
+   │                              │  nese user.mfaEnabled == true:
+   │                              │    mfaToken = sign({sub,type:'mfa_pending'})
+   │ ◀───────────────────────────  { requiresMfa: true, mfaToken }
+   │                                                                  │
+   │  POST /api/v1/mfa/verify {mfaToken, code}                       │
+   │ ───────────────────────────▶                                    │
+   │                              │  verify(mfaToken) -&gt; payload      │
+   │                              │  user = findUnique({id:payload.sub})
+   │                              │ ──────────────────────────────────▶
+   │                              │ ◀──────────────────────────────────
+   │                              │  speakeasy.totp.verify(secret, code)
+   │                              │  accessToken = sign(...), refreshToken = sign(...)
+   │                              │  logAudit('mfa.verify_login', success)
+   │ ◀───────────────────────────  { user, accessToken, refreshToken }</pre>
+<h3>4.4 Struktura e projektit</h3>
+<pre>projekti-api/
+├── prisma/
+│   ├── schema.prisma          # Modelet: User, Member, Author, Category, Book, Loan
+│   ├── seed.js                # Te dhena fillestare (admin/librarian/member, libra demo)
+│   └── migrations/            # Historiku i migrimeve te DB-se
+├── src/
+│   ├── config/                # env, logger, audit-logger, prisma, redis, swagger
+│   ├── controllers/           # auth, mfa, books, authors, categories, members, loans
+│   ├── middleware/             # auth (JWT/RBAC), validate, cache, error
+│   ├── routes/v1/              # Endpoint-et REST te versionuara
+│   ├── services/                # Logjika e biznesit (Prisma queries, validime biznesi)
+│   ├── utils/                   # ApiError, asyncHandler, jwt, audit
+│   ├── validators/               # Rregulla validimi (express-validator)
+│   ├── app.js                    # Konfigurimi i Express (middleware, routes, error handler)
+│   └── server.js                 # Pika hyrese (http listen)
+├── tests/
+│   ├── unit/                     # 6 suite — ApiError, jwt, audit, *.service
+│   ├── integration/              # 7 suite — auth, mfa, loans, books, authors, categories, members
+│   └── helpers/db.js             # resetDatabase/disconnect per teste
+├── frontend/                       # Aplikacioni React + Vite
+│   ├── src/
+│   │   ├── api/                    # klient axios/fetch per cdo resurse (auth, books, loans, ...)
+│   │   ├── components/             # Layout, Modal, Pagination, ProtectedRoute, Spinner, ...
+│   │   ├── context/                 # AuthContext (token, user, role)
+│   │   └── pages/                   # Login, Register, Dashboard, Books, Authors, Categories,
+│   │                                 #   Members, MemberDetail, Loans, Profile, NotFound
+│   └── vite.config.js
+├── .github/workflows/ci.yml        # CI: lint/migrate/test + docker build
+├── Dockerfile
+├── docker-compose.yml               # postgres + redis + api
+└── package.json</pre>
+<div class="page-break"></div>
+<h2>5. Pershkrimi i implementimit</h2>
+<h3>5.1 Stack teknologjik</h3>
+<table><thead><tr><th>Shtresa</th><th>Teknologjia</th></tr></thead><tbody><tr><td>Runtime</td><td>Node.js 20+</td></tr><tr><td>Framework (BE)</td><td>Express 5</td></tr><tr><td>Frontend</td><td>React + Vite</td></tr><tr><td>Databaza</td><td>PostgreSQL 16</td></tr><tr><td>ORM</td><td>Prisma 6</td></tr><tr><td>Autentifikim</td><td>JSON Web Tokens (<code>jsonwebtoken</code>) + <code>bcryptjs</code></td></tr><tr><td>MFA</td><td><code>speakeasy</code> (TOTP) + <code>qrcode</code></td></tr><tr><td>Caching</td><td>Redis (<code>ioredis</code>)</td></tr><tr><td>Validim</td><td><code>express-validator</code></td></tr><tr><td>Logim</td><td>Winston + Morgan</td></tr><tr><td>Dokumentim</td><td><code>swagger-jsdoc</code> + <code>swagger-ui-express</code></td></tr><tr><td>Teste</td><td>Jest + Supertest</td></tr><tr><td>Cilesia e kodit</td><td>ESLint (flat config) + Prettier</td></tr><tr><td>Konteinerizim</td><td>Docker + docker-compose</td></tr><tr><td>CI/CD</td><td>GitHub Actions</td></tr></tbody></table>
+<h3>5.2 Arkitektura e shtresuar (backend)</h3>
+<p>Kodi i backend-it ndjek nje arkitekture klasike me shtresa te ndara qarte, me qellim respektimin e parimeve <strong>SOLID</strong> (vecanerisht <em>Single Responsibility</em> dhe <em>Dependency direction</em>):</p>
+<ol>
+<li><strong>Routes</strong> (<code>src/routes/v1/*.js</code>) — perkufizojne endpoint-et HTTP, lidhin middleware-t (autentifikim, autorizim, validim, cache) me controller-at perkates, dhe mbajne dokumentimin OpenAPI (JSDoc <code>@openapi</code>).</li>
+<li><strong>Controllers</strong> (<code>src/controllers/*.js</code>) — pranojne <code>req</code>/<code>res</code>, thirrin shtresen e sherbimeve, formatojne pergjigjen JSON (<code>{ success, data }</code> ose <code>{ success, items, pagination }</code>), dhe regjistrojne ngjarje ne <strong>audit log</strong> kur eshte rasti.</li>
+<li><strong>Services</strong> (<code>src/services/*.js</code>) — permbajne logjiken e biznesit te pastert (rregulla si "nuk mund te fshish nje autor qe ka libra", "nuk mund te huazosh nje liber pa kopje te lira"), komunikojne me databazen permes Prisma dhe me cache-in permes <code>invalidatePrefix</code>.</li>
+<li><strong>Prisma ORM / PostgreSQL</strong> — shtresa e qendrueshmerise; skema e percaktuar deklarativisht ne <code>prisma/schema.prisma</code>, e versionuar permes migrimeve.</li>
+</ol>
+<p>Gabimet trajtohen ne menyre uniforme permes klases <code>ApiError</code> (<code>src/utils/ApiError.js</code>) dhe middleware-it global <code>error.middleware.js</code>, qe kthen gjithmone strukturen:</p>
+<pre>{ "success": false, "error": { "code": 404, "message": "Book not found" } }</pre>
+<h3>5.3 Autentifikimi, autorizimi dhe MFA</h3>
+<ul>
+<li><strong>Regjistrimi/Login</strong> (<code>src/services/auth.service.js</code>): fjalekalimet hashohen me <code>bcrypt</code> (<code>config.bcryptRounds</code>); login kthen <code>accessToken</code> + <code>refreshToken</code> (JWT, HS256) me payload <code>{ sub, email, role }</code>.</li>
+<li><strong>Refresh</strong> (<code>POST /auth/refresh</code>): verifikon <code>refreshToken</code> (tip <code>refresh</code>) dhe leshon nje cift te ri token-ash.</li>
+<li><strong>MFA (TOTP)</strong> (<code>src/services/mfa.service.js</code>):</li>
+<li><code>POST /mfa/setup</code> — gjeneron sekret TOTP (<code>speakeasy.generateSecret</code>) dhe nje QR code (<code>qrcode.toDataURL</code>) per Google Authenticator/Authy.</li>
+<li><code>POST /mfa/enable</code> — verifikon kodin e pare TOTP dhe aktivizon <code>mfaEnabled = true</code>.</li>
+<li>Kur MFA eshte aktive, <code>login</code> nuk leshon menjehere token-a, por nje <code>mfaToken</code> (tip <code>mfa_pending</code>, jetegjatesi e shkurter) dhe <code>{ requiresMfa: true }</code>.</li>
+<li><code>POST /mfa/verify</code> — pranon <code>{ mfaToken, code }</code>, verifikon TOTP-in (me dritare toleranc <code>window: 1</code>) dhe vetem atehere leshon <code>accessToken</code>/<code>refreshToken</code> te plote.</li>
+<li><code>POST /mfa/disable</code> — kerkon nje kod TOTP te vlefshem para se te ckaktivizoje MFA-ne.</li>
+<li><strong>RBAC</strong> (<code>src/middleware/auth.middleware.js</code>):</li>
+<li><code>authenticate</code> — verifikon <code>Authorization: Bearer &lt;token&gt;</code>, refuzon token-a te tipit <code>refresh</code>/<code>mfa_pending</code> ne endpoint-et e zakonshme.</li>
+<li><code>authorize(...roles)</code> — kontrollon <code>req.user.role</code> kunder nje liste rolesh te lejuara (p.sh. <code>authorize('ADMIN','LIBRARIAN')</code>), duke kthyer <code>403 Forbidden</code> ne te kundert.</li>
+</ul>
+<h3>5.4 Audit logging (siguri &amp; gjurmueshmeri)</h3>
+<p>Per t'iu pergjigjur kerkeses per <strong>auditim te veprimeve te perdoruesve</strong>, eshte shtuar nje shtrese e dedikuar audit-loggimi, e ndare nga log-u standard i aplikacionit:</p>
+<ul>
+<li><code>src/config/audit-logger.js</code> — nje logger i vecante Winston, qe shkruan ne <strong><code>logs/audit.log</code></strong> ne format <strong>JSON</strong> (pa dalje ne konsole), me <code>defaultMeta: { service: 'library-api-audit' }</code>.</li>
+<li><code>src/utils/audit.js</code> — funksioni <code>logAudit(req, { action, outcome, resource, resourceId, actorEmail, reason, meta })</code>, qe ndertonon nje rekord te plote: <code>userId</code>, <code>email</code>, <code>role</code> (te marra nga <code>req.user</code>, ose <code>actorEmail</code> per veprime te deshtuara para autentifikimit), <code>ip</code> (<code>req.ip</code>), <code>resource</code>, <code>resourceId</code>, dhe fusha opsionale <code>reason</code>/<code>meta</code>.</li>
+<li><strong>Veprimet e mbuluara</strong>:</li>
+<li><code>auth.register</code>, <code>auth.login</code> (sukses <strong>dhe</strong> deshtim, me <code>reason</code>), <code>auth.refresh</code></li>
+<li><code>mfa.setup</code>, <code>mfa.enable</code>, <code>mfa.disable</code>, <code>mfa.verify_login</code> (sukses/deshtim)</li>
+<li><code>book.create</code> / <code>book.update</code> / <code>book.delete</code></li>
+<li><code>author.create</code> / <code>author.update</code> / <code>author.delete</code></li>
+<li><code>category.create</code> / <code>category.update</code> / <code>category.delete</code></li>
+<li><code>member.update</code> / <code>member.delete</code></li>
+<li><code>loan.borrow</code> / <code>loan.return</code> / <code>loan.mark_overdue</code></li>
+</ul>
+<p>Shembull rekord nga <code>logs/audit.log</code>:</p>
+<pre>{
+  "level": "info",
+  "message": "audit_event",
+  "service": "library-api-audit",
+  "timestamp": "2026-06-10T10:15:23.123Z",
+  "action": "loan.borrow",
+  "outcome": "success",
+  "userId": 3,
+  "email": "member@library.com",
+  "role": "MEMBER",
+  "ip": "::1",
+  "resource": "loan",
+  "resourceId": 12,
+  "meta": { "bookId": 2, "memberId": 1 }
+}</pre>
+<p>Ky log eshte i ndare nga <code>error.log</code>/<code>combined.log</code> (qe mbeten per debug/monitorim teknik), dhe mund te perdoret ne te ardhmen per integrim me nje sistem SIEM ose dashboard auditimi.</p>
+<h3>5.5 Caching me Redis</h3>
+<p>Endpoint-et publike te listave/detajeve (<code>GET /books</code>, <code>GET /books/:id</code>, <code>GET /authors</code>, <code>GET /authors/:id</code>, <code>GET /categories</code>, <code>GET /categories/:id</code>) kalojne permes <code>cacheMiddleware(prefix, ttl)</code>:</p>
+<ul>
+<li>Nese <code>Redis</code> eshte i konfiguruar (<code>REDIS_URL</code>), kerkesa kontrollohet ne cache me celes <code>"&lt;prefix&gt;:&lt;originalUrl&gt;"</code>. Nese gjendet, kthehet direkt pergjigja e ruajtur (cache hit).</li>
+<li>Ne te kundert (cache miss), pergjigja gjenerohet normalisht dhe ruhet me <code>SETEX</code> (TTL 120s per lista, 300s per detaje).</li>
+<li>Ne cdo <code>create</code>/<code>update</code>/<code>delete</code>, sherbimi perkates thret <code>invalidatePrefix(prefix)</code>, qe fshin te gjitha celesat me ate prefiks (p.sh. <code>books:*</code>), duke garantuar konsistence te te dhenave.</li>
+<li>Nese Redis nuk eshte i disponueshem, sistemi vazhdon te funksionoje normalisht (graceful fallback — <code>cacheMiddleware</code> thjesht thirret <code>next()</code>).</li>
+</ul>
+<h3>5.6 Validimi dhe trajtimi i gabimeve</h3>
+<ul>
+<li>Cdo route ka rregulla validimi te percaktuara me <code>express-validator</code> (p.sh. email i vlefshem, fjalekalim min. 8 karaktere, ISBN max 20 karaktere, <code>page</code>/<code>limit</code> numra te plote pozitiv).</li>
+<li>Middleware <code>validate.middleware.js</code> mbledh gabimet e validimit dhe i kthen si <code>400 Bad Request</code> me <code>error.details</code> (lista fushash + mesazhe).</li>
+<li>Gabimet e biznesit (p.sh. "ISBN already exists", "Cannot delete author with books", "Member has active loans") hidhen si <code>ApiError</code> me kodin HTTP perkates (400/401/403/404/409) dhe kapen nga <code>error.middleware.js</code>.</li>
+</ul>
+<h3>5.7 Dokumentimi i API-se (OpenAPI/Swagger)</h3>
+<p>Cdo route eshte e dokumentuar me anotacione <code>@openapi</code> (JSDoc), te mbledhura nga <code>swagger-jsdoc</code> ne nje specifikim <strong>OpenAPI 3.0.3</strong>, te shfaqur interaktivisht ne <strong><code>/api/docs</code></strong> (Swagger UI) dhe ne format JSON ne <code>/api/docs.json</code>. Specifikimi perfshin skema per <code>AuthResponse</code>, <code>BookCreate</code>, pergjigje te perbashketa (<code>Unauthorized</code>, <code>Forbidden</code>, <code>NotFound</code>, <code>ValidationError</code>), dhe skemen e sigurise <code>bearerAuth</code> (JWT).</p>
+<h3>5.8 Frontend (React + Vite)</h3>
+<p>Aplikacioni frontend (<code>frontend/</code>) eshte nje <strong>Single Page Application</strong> ne React, i ndertuar me Vite, qe konsumon API-ne REST permes nje shtrese <code>api/</code> (nje modul per cdo resurse: <code>auth</code>, <code>authors</code>, <code>books</code>, <code>categories</code>, <code>loans</code>, <code>members</code>, <code>mfa</code>).</p>
+<ul>
+<li><strong><code>context/</code></strong> — <code>AuthContext</code> ruan token-in JWT, te dhenat e perdoruesit dhe rolin, dhe i ben te disponueshem ne te gjithe aplikacionin.</li>
+<li><strong><code>components/</code></strong> — <code>Layout</code> (navigim sipas rolit), <code>ProtectedRoute</code> (mbron rrugët qe kerkojne autentifikim/role specifike), <code>Modal</code>, <code>Pagination</code>, <code>Spinner</code>, <code>Alert</code>, <code>StatusBadge</code>.</li>
+<li><strong><code>pages/</code></strong> — <code>Login</code>, <code>Register</code>, <code>Dashboard</code>, <code>Books</code>, <code>BookDetail</code>, <code>Authors</code>, <code>Categories</code>, <code>Members</code>, <code>MemberDetail</code>, <code>Loans</code>, <code>Profile</code>, <code>NotFound</code>.</li>
+<li>Flukset kryesore te mbuluara nga UI: regjistrim/login (perfshire MFA), shfletim/kerkim/paginim librash, huazim/kthim librash, menaxhim librash/autoresh/kategorish (ADMIN/LIBRARIAN), menaxhim anetaresh dhe profili personal, aktivizim/ckaktivizim MFA nga profili.</li>
+</ul>
+<h3>5.9 Konteinerizimi (Docker &amp; docker-compose)</h3>
+<ul>
+<li><strong><code>Dockerfile</code></strong> — build me shumë faza (<code>base</code> → <code>deps</code> → <code>runner</code>), bazuar ne <code>node:20-alpine</code>; instalon vetem <code>dependencies</code> (jo <code>devDependencies</code>), gjeneron Prisma Client, ekzekutohet me perdorues jo-root, ka <code>HEALTHCHECK</code> ne <code>/api/v1/health</code>, dhe ne starup ekzekuton <code>prisma migrate deploy</code> para <code>node src/server.js</code>.</li>
+<li><strong><code>docker-compose.yml</code></strong> — orkestron tre sherbime: <code>postgres</code> (port 5434→5432, me volum persistent <code>library_pgdata</code>), <code>redis</code> (port 6379), dhe <code>api</code> (port 4000), te lidhura permes <code>depends_on: condition: service_healthy</code>.</li>
+</ul>
+<h3>5.10 CI/CD (GitHub Actions)</h3>
+<p>Workflow <code>.github/workflows/ci.yml</code> ekzekutohet ne <code>push</code>/<code>pull_request</code> ne <code>main</code>/<code>develop</code>:</p>
+<ol>
+<li><strong>Job <code>test</code></strong>: ngre nje container Postgres si <em>service</em>, instalon dependencat (<code>npm ci</code>), gjeneron Prisma Client, aplikon migrimet (<code>prisma migrate deploy</code>) dhe ekzekuton <code>npm test</code> (116 teste).</li>
+<li><strong>Job <code>docker</code></strong> (varet nga <code>test</code>): ndertimi i imazhit Docker te aplikacionit (pa push), me cache te GitHub Actions per shpejtesi.</li>
+</ol>
+<p>Kjo garanton qe cdo ndryshim i ri ne kod <strong>nuk thyen</strong> testet ekzistuese dhe se imazhi Docker mbetet i ndertueshem.</p>
+<div class="page-break"></div>
+<h2>6. Testimi dhe rezultatet</h2>
+<h3>6.1 Strategjia e testimit</h3>
+<p>Testimi eshte i ndare ne dy nivele:</p>
+<ul>
+<li><strong>Teste njesie (unit)</strong> — testojne funksione/module te izoluara (ne <code>tests/unit/</code>), duke <em>mockuar</em> Prisma Client dhe Redis, per te verifikuar logjiken e biznesit pa varesi nga nje databaze reale (p.sh. rregullat "nuk fshihet kategoria me libra", "ISBN duplikat → 409").</li>
+<li><strong>Teste integrimi</strong> — ekzekutojne API-ne e plote (<code>src/app.js</code>) permes <strong>Supertest</strong>, kunder nje databaze <strong>PostgreSQL reale</strong> te dedikuar per teste (<code>library_test_db</code>), duke mbuluar rrjedhat e plota HTTP: autentifikim, role/leje, validim, kodet e statusit dhe formatin e pergjigjeve.</li>
+</ul>
+<p>Te gjitha testet ekzekutohen ne menyre sekuenciale (<code>jest --runInBand</code>) per te shmangur konfliktet mbi te njejten databaze.</p>
+<h3>6.2 Permbledhje e test suite-ve</h3>
+<table><thead><tr><th>Lloji</th><th>Test suite</th><th>Nr. testesh</th><th>Mbulon</th></tr></thead><tbody><tr><td>Njesi</td><td><code>tests/unit/ApiError.test.js</code></td><td>6</td><td>Klasa <code>ApiError</code> (400/401/403/404/409, <code>details</code>)</td></tr><tr><td>Njesi</td><td><code>tests/unit/jwt.test.js</code></td><td>3</td><td>Sign/verify JWT, token i pavlefshem/i manipuluar</td></tr><tr><td>Njesi</td><td><code>tests/unit/audit.test.js</code></td><td>3</td><td><code>logAudit</code> — payload korrekt, fallback <code>actorEmail</code>, <code>meta</code>/<code>reason</code> opsionale</td></tr><tr><td>Njesi</td><td><code>tests/unit/categories.service.test.js</code></td><td>6</td><td><code>getCategoryById</code>, <code>createCategory</code> (409 emer), <code>deleteCategory</code> (409 me libra)</td></tr><tr><td>Njesi</td><td><code>tests/unit/authors.service.test.js</code></td><td>6</td><td><code>getAuthorById</code>, <code>updateAuthor</code> (404), <code>deleteAuthor</code> (409 me libra)</td></tr><tr><td>Njesi</td><td><code>tests/unit/books.service.test.js</code></td><td>11</td><td><code>createBook</code> (409 ISBN, 400 author/category, default <code>availableCopies</code>), <code>updateBook</code> (404, 409 ISBN), <code>deleteBook</code> (404, 409 huazime aktive)</td></tr><tr><td>Integrim</td><td><code>tests/integration/auth.test.js</code></td><td>8</td><td>Register (201/409/400), Login (200/401), <code>/auth/me</code> (401/200)</td></tr><tr><td>Integrim</td><td><code>tests/integration/mfa.test.js</code></td><td>12</td><td>Setup/Enable/Disable/Verify MFA, login me <code>requiresMfa</code>, kode TOTP te sakta/te gabuara</td></tr><tr><td>Integrim</td><td><code>tests/integration/loans.test.js</code></td><td>7</td><td>Huazim, dyfishim (409), pa kopje (409), kthim, ri-kthim (409), liste (ADMIN/403 MEMBER)</td></tr><tr><td>Integrim</td><td><code>tests/integration/books.test.js</code></td><td>14</td><td>CRUD i plote, role (401/403), validim (400), ISBN duplikat (409), fshirje me huazime aktive (409)</td></tr><tr><td>Integrim</td><td><code>tests/integration/authors.test.js</code></td><td>11</td><td>CRUD i plote, role, validim, fshirje autori me libra (409)</td></tr><tr><td>Integrim</td><td><code>tests/integration/categories.test.js</code></td><td>13</td><td>CRUD i plote, role, validim, emer duplikat (409), fshirje kategorie me libra (409)</td></tr><tr><td>Integrim</td><td><code>tests/integration/members.test.js</code></td><td>16</td><td><code>/me</code>, liste (403 MEMBER), qasje vetem ne profilin vetjak (403), perditesim, fshirje me huazime aktive (409)</td></tr><tr><td><strong>Total</strong></td><td></td><td><strong>116</strong></td><td></td></tr></tbody></table>
+<h3>6.3 Rezultatet e ekzekutimit</h3>
+<pre>$ npm test
+
+Test Suites: 13 passed, 13 total
+Tests:       116 passed, 116 total
+Snapshots:   0 total
+Time:        ~12s</pre>
+<h3>6.4 Cilesia e kodit (lint)</h3>
+<pre>$ npm run lint
+&gt; library-api@1.0.0 lint
+&gt; eslint .
+
+(pa gabime/warnings)</pre>
+<p>Konfigurimi ESLint (flat config, <code>eslint.config.js</code>) perdor <code>@eslint/js</code> (recommended), <code>globals</code> (Node + Jest), dhe <code>eslint-config-prettier</code> (per te shmangur konfliktet me Prettier). Rregulla kryesore: <code>no-unused-vars</code> (me <code>argsIgnorePattern</code>/<code>varsIgnorePattern</code> per parametra te pa-perdorur te shenuar me <code>_</code>).</p>
+<h3>6.5 Testim manual</h3>
+<p>Perpos testeve automatike, API-ja eshte testuar manualisht permes:</p>
+<ul>
+<li><strong>Swagger UI</strong> (<code>/api/docs</code>) — ekzekutim i çdo endpoint-i me <code>Authorize</code> (Bearer token), per te verifikuar pergjigjet reale dhe kodet e statusit per role te ndryshme (ADMIN/LIBRARIAN/MEMBER).</li>
+<li><strong>Frontend (React)</strong> — testim i fluksit te plote nga UI: regjistrim → login → (MFA nese aktive) → shfletim librash → huazim/kthim → menaxhim libra/autore/kategori (per role me te drejta) → menaxhim profili.</li>
+<li><strong>Postman/cURL</strong> — verifikim shtese i skenareve te gabimeve (token i skaduar/i pavlefshem, fjalekalim i gabuar, ISBN duplikat, etj.).</li>
+</ul>
+<blockquote><p><em>(Shto ketu screenshot-e konkrete nga Swagger UI dhe nga frontend-i — shih Shtojcen 9.5.)</em></p></blockquote>
+<div class="page-break"></div>
+<h2>7. Konkluzione</h2>
+<p>Projekti arriti te implementoje nje <strong>REST API te plote, te sigurte dhe te dokumentuar mire</strong> per menaxhimin e nje biblioteke, te shoqeruar nga nje <strong>aplikacion web funksional</strong>, duke u perputhur me kerkesat kryesore te lendes: arkitekture e shtresuar, siguri (JWT/RBAC/MFA/audit), performance (caching, paginim, indekse), dokumentim OpenAPI, versionim, logim/monitorim, integrim me databaze relacionale, standarde kodimi (ESLint/Prettier) dhe teste automatike (116), si dhe konteinerizim dhe CI/CD.</p>
+<p><strong>Sfidat kryesore</strong> te hasura dhe menyra e zgjidhjes:</p>
+<ul>
+<li><strong>Konfigurimi i mjedisit te testimit ne CI</strong> — variablat e mjedisit te <code>.env.test</code> (te konfiguruara per Postgres lokal ne portin <code>5434</code>) e mbishkruanin <code>DATABASE_URL</code>-in e injektuar nga GitHub Actions (porti <code>5432</code>). Zgjidhja: heqja e flamurit <code>override: true</code> ne <code>tests/setup-env.js</code>, duke lejuar variablat e CI-se te kene perparesi.</li>
+<li><strong>Migrimet ne CI</strong> — <code>prisma/migrations/</code> ishin te perjashtuara nga git (<code>.gitignore</code>), keshtu qe <code>prisma migrate deploy</code> ne CI nuk gjente asnje migrim per t'u aplikuar dhe tabelat (p.sh. <code>loans</code>) nuk ekzistonin. Zgjidhja: heqja e ketij rreshti nga <code>.gitignore</code>, ne menyre qe migrimet te jene pjese e repository-t.</li>
+<li><strong>Mbulimi me teste</strong>: fillimisht vetem <code>auth</code> dhe <code>loans</code> ishin te mbuluara me teste integrimi; u shtuan suite te plota per <code>books</code>, <code>authors</code>, <code>categories</code>, <code>members</code>, <code>mfa</code>, si dhe teste njesie per shtresen e sherbimeve dhe per audit-loggimin.</li>
+</ul>
+<p><strong>Permiresime te mundshme ne te ardhmen</strong>:</p>
+<ul>
+<li>Integrim me nje sistem te centralizuar te logeve/monitorimit (p.sh. ELK Stack ose Grafana Loki) per audit log dhe metrika.</li>
+<li>Shtim i njoftimeve me email (p.sh. kujtesa per huazime qe afrohen drejt skadences).</li>
+<li>Role/leje me te detajuara (p.sh. nen-role per stafin e bibliotekes).</li>
+<li>"Refresh token rotation" dhe lista e zezë (blacklist) e token-ave te revokuar.</li>
+<li>Cache me te avancuar (invalidim selektiv ne vend te <code>invalidatePrefix</code> te plote).</li>
+</ul>
+<div class="page-break"></div>
+<h2>8. Referencat</h2>
+<ul>
+<li>Express.js — Dokumentimi zyrtar, https://expressjs.com/</li>
+<li>Prisma ORM — Dokumentimi zyrtar, https://www.prisma.io/docs</li>
+<li>PostgreSQL — Dokumentimi zyrtar, https://www.postgresql.org/docs/</li>
+<li>JSON Web Tokens (JWT) — https://jwt.io/introduction</li>
+<li>OWASP — Cheat Sheet Series (Authentication, REST Security), https://cheatsheetseries.owasp.org/</li>
+<li>OpenAPI Specification — https://swagger.io/specification/</li>
+<li>Redis — Dokumentimi zyrtar, https://redis.io/docs/</li>
+<li>Jest — Dokumentimi zyrtar, https://jestjs.io/docs/getting-started</li>
+<li>Speakeasy (TOTP/2FA) — https://www.npmjs.com/package/speakeasy</li>
+<li>React — Dokumentimi zyrtar, https://react.dev/</li>
+<li>Vite — Dokumentimi zyrtar, https://vitejs.dev/</li>
+<li>Docker — Dokumentimi zyrtar, https://docs.docker.com/</li>
+<li>GitHub Actions — Dokumentimi zyrtar, https://docs.github.com/actions</li>
+<li>Materialet e lendes "Sherbime Web dhe API-Web (SPDD)" — Prof.ass.Dr.sc. Liridon Hoti</li>
+</ul>
+<div class="page-break"></div>
+<h2>9. Shtojca</h2>
+<h3>9.1 Lista e endpoint-ve kryesore</h3>
+<p><strong>Auth</strong> (<code>/api/v1/auth</code>)</p>
+<table><thead><tr><th>Metoda</th><th>Path</th><th>Pershkrim</th><th>Auth</th></tr></thead><tbody><tr><td>POST</td><td><code>/register</code></td><td>Regjistrim perdoruesi i ri (rol <code>MEMBER</code>)</td><td>—</td></tr><tr><td>POST</td><td><code>/login</code></td><td>Login → JWT ose <code>requiresMfa</code></td><td>—</td></tr><tr><td>POST</td><td><code>/refresh</code></td><td>Access token i ri nga refresh token</td><td>—</td></tr><tr><td>GET</td><td><code>/me</code></td><td>Te dhenat e perdoruesit aktual</td><td>JWT</td></tr></tbody></table>
+<p><strong>MFA</strong> (<code>/api/v1/mfa</code>)</p>
+<table><thead><tr><th>Metoda</th><th>Path</th><th>Pershkrim</th><th>Auth</th></tr></thead><tbody><tr><td>POST</td><td><code>/setup</code></td><td>Gjenero sekret TOTP + QR</td><td>JWT</td></tr><tr><td>POST</td><td><code>/enable</code></td><td>Aktivizo MFA me kod TOTP</td><td>JWT</td></tr><tr><td>POST</td><td><code>/disable</code></td><td>Ckativizo MFA me kod TOTP</td><td>JWT</td></tr><tr><td>POST</td><td><code>/verify</code></td><td>Perfundo login me <code>mfaToken</code> + kod</td><td>—</td></tr></tbody></table>
+<p><strong>Books</strong> (<code>/api/v1/books</code>)</p>
+<table><thead><tr><th>Metoda</th><th>Path</th><th>Pershkrim</th><th>Roli</th></tr></thead><tbody><tr><td>GET</td><td><code>/</code></td><td>Liste librash (paginim, kerkim, filtra)</td><td>Publik</td></tr><tr><td>GET</td><td><code>/:id</code></td><td>Detaje libri</td><td>Publik</td></tr><tr><td>POST</td><td><code>/</code></td><td>Krijim libri</td><td>ADMIN/LIBRARIAN</td></tr><tr><td>PUT</td><td><code>/:id</code></td><td>Perditesim libri</td><td>ADMIN/LIBRARIAN</td></tr><tr><td>DELETE</td><td><code>/:id</code></td><td>Fshirje libri</td><td>ADMIN</td></tr></tbody></table>
+<p><strong>Authors</strong> (<code>/api/v1/authors</code>) dhe <strong>Categories</strong> (<code>/api/v1/categories</code>) — te njejtin model si Books (GET publik; POST/PUT ADMIN/LIBRARIAN; DELETE ADMIN; bllokim fshirje nese ka libra te lidhur).</p>
+<p><strong>Members</strong> (<code>/api/v1/members</code>)</p>
+<table><thead><tr><th>Metoda</th><th>Path</th><th>Pershkrim</th><th>Auth</th></tr></thead><tbody><tr><td>GET</td><td><code>/me</code></td><td>Profili i anetarit aktual</td><td>JWT</td></tr><tr><td>GET</td><td><code>/</code></td><td>Liste anetaresh (paginim, kerkim)</td><td>ADMIN/LIBRARIAN</td></tr><tr><td>GET</td><td><code>/:id</code></td><td>Detaje anetari (vetjak ose ADMIN/LIBRARIAN)</td><td>JWT</td></tr><tr><td>PUT</td><td><code>/:id</code></td><td>Perditesim profili (vetjak ose ADMIN/LIBRARIAN)</td><td>JWT</td></tr><tr><td>DELETE</td><td><code>/:id</code></td><td>Fshirje anetari (vetem nese s'ka huazime aktive)</td><td>ADMIN</td></tr></tbody></table>
+<p><strong>Loans</strong> (<code>/api/v1/loans</code>)</p>
+<table><thead><tr><th>Metoda</th><th>Path</th><th>Pershkrim</th><th>Auth</th></tr></thead><tbody><tr><td>GET</td><td><code>/me</code></td><td>Huazimet e mia</td><td>JWT</td></tr><tr><td>GET</td><td><code>/</code></td><td>Te gjitha huazimet</td><td>ADMIN/LIBRARIAN</td></tr><tr><td>POST</td><td><code>/borrow</code></td><td>Huazim libri</td><td>JWT</td></tr><tr><td>POST</td><td><code>/:id/return</code></td><td>Kthim libri</td><td>JWT (vetem pronari, ose ADMIN/LIBRARIAN)</td></tr><tr><td>POST</td><td><code>/mark-overdue</code></td><td>Sweep huazimesh te skaduara</td><td>ADMIN/LIBRARIAN</td></tr></tbody></table>
+<h3>9.2 Perdoruesit e paracaktuar (seed)</h3>
+<table><thead><tr><th>Email</th><th>Fjalekalimi</th><th>Roli</th></tr></thead><tbody><tr><td>admin@library.com</td><td>admin123</td><td>ADMIN</td></tr><tr><td>librarian@library.com</td><td>librarian123</td><td>LIBRARIAN</td></tr><tr><td>member@library.com</td><td>member123</td><td>MEMBER</td></tr></tbody></table>
+<h3>9.3 Variablat kryesore te mjedisit (<code>.env</code>)</h3>
+<table><thead><tr><th>Variabla</th><th>Pershkrim</th><th>Vlere shembull</th></tr></thead><tbody><tr><td><code>DATABASE_URL</code></td><td>Lidhja me PostgreSQL</td><td><code>postgresql://library:library@localhost:5434/library_db?schema=public</code></td></tr><tr><td><code>JWT_SECRET</code></td><td>Sekreti per nenshkrimin e JWT</td><td>(i fshehte, min. 32+ karaktere ne prodhim)</td></tr><tr><td><code>JWT_EXPIRES_IN</code></td><td>Jetegjatesia e access token-it</td><td><code>1d</code></td></tr><tr><td><code>JWT_REFRESH_EXPIRES_IN</code></td><td>Jetegjatesia e refresh token-it</td><td><code>7d</code></td></tr><tr><td><code>BCRYPT_ROUNDS</code></td><td>Numri i raundeve bcrypt</td><td><code>10</code></td></tr><tr><td><code>RATE_LIMIT_WINDOW_MS</code> / <code>RATE_LIMIT_MAX</code></td><td>Konfigurimi i rate-limiting</td><td><code>900000</code> / <code>100</code></td></tr><tr><td><code>REDIS_URL</code></td><td>Lidhja me Redis (opsionale)</td><td><code>redis://localhost:6379</code></td></tr><tr><td><code>LOG_LEVEL</code></td><td>Niveli i logimit (Winston)</td><td><code>info</code></td></tr></tbody></table>
+<h3>9.4 Komandat kryesore</h3>
+<table><thead><tr><th>Komanda</th><th>Pershkrim</th></tr></thead><tbody><tr><td><code>npm run setup</code></td><td>Postgres (Docker) + migrime + seed</td></tr><tr><td><code>npm run dev</code></td><td>API ne <code>http://localhost:4000</code> me auto-reload</td></tr><tr><td><code>npm test</code></td><td>116 teste (Jest, <code>--runInBand</code>)</td></tr><tr><td><code>npm run lint</code></td><td>ESLint mbi krejt projektin</td></tr><tr><td><code>docker compose up -d --build</code></td><td>Ngritja e plote e stack-ut (Postgres + Redis + API)</td></tr></tbody></table>
+<h3>9.5 Ekran-pamje (Screenshots)</h3>
+<blockquote><p><em>(Ketu shtohen ekran-pamje reale, p.sh.:)</em></p><ul><li>Swagger UI — <code>/api/docs</code> me endpoint-et e zgjeruara</li><li>Pergjigje <code>200 OK</code> per <code>GET /api/v1/books</code></li><li>Frontend — faqja e Login/Register</li><li>Frontend — lista e librave me paginim</li><li>Frontend — Dashboard / Profile me opsionin e MFA</li><li>Rezultati i <code>npm test</code> (116/116 PASS)</li><li>Rezultati i <code>npm run lint</code> (pa gabime)</li></ul></blockquote>
+
+</body>
+</html>

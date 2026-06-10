@@ -14,7 +14,7 @@ function authenticate(req, _res, next) {
     }
     req.user = { id: payload.sub, email: payload.email, role: payload.role };
     return next();
-  } catch (err) {
+  } catch {
     return next(ApiError.unauthorized('Invalid or expired token'));
   }
 }

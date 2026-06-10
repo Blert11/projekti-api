@@ -1,6 +1,7 @@
 const asyncHandler = require('../utils/asyncHandler');
 const svc = require('../services/members.service');
 const ApiError = require('../utils/ApiError');
+const { logAudit } = require('../utils/audit');
 
 const list = asyncHandler(async (req, res) => {
   const result = await svc.listMembers(req.query);
@@ -26,11 +27,13 @@ const update = asyncHandler(async (req, res) => {
     throw ApiError.forbidden('You can only update your own profile');
   }
   const updated = await svc.updateMember(req.params.id, req.body);
+  logAudit(req, { action: 'member.update', resource: 'member', resourceId: updated.id });
   res.json({ success: true, data: updated });
 });
 
 const remove = asyncHandler(async (req, res) => {
   await svc.deleteMember(req.params.id);
+  logAudit(req, { action: 'member.delete', resource: 'member', resourceId: Number(req.params.id) });
   res.status(204).send();
 });
 

@@ -73,7 +73,7 @@ async function verifyMfaLogin({ mfaToken, code }) {
 }
 
 function sanitize(user) {
-  const { password, mfaSecret, ...rest } = user;
+  const { password: _password, mfaSecret: _mfaSecret, ...rest } = user;
   return rest;
 }
 

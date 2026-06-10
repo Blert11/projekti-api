@@ -213,7 +213,7 @@ curl -X POST http://localhost:4000/api/v1/books \
 npm test
 ```
 
-Kjo ekzekuton **24 teste** (njesi + integrim). Te gjitha duhet te dalin **PASS**.
+Kjo ekzekuton **116 teste** (njesi + integrim). Te gjitha duhet te dalin **PASS**.
 
 ---
 

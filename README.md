@@ -33,6 +33,7 @@ REST API ne **Node.js + Express** me **PostgreSQL + Prisma ORM** per menaxhimin 
 - **Caching me Redis** per endpoint-et e listave (books/authors/categories) me invalidim automatik
 - Dokumentacion interaktiv me **Swagger UI** ne `/api/docs`
 - Logim qendror me **Winston** (file + console)
+- **Audit log** (`logs/audit.log`) per veprime te ndjeshme: login/refresh (sukses/deshtim), MFA setup/enable/disable/verify, dhe CRUD per books/authors/categories/members/loans (kush, cfare, kur, nga cili IP)
 - Logjike biznesi per huazim/kthim me **transaksione** Prisma
 - Paginim & filtrim per liste-endpointet
 - **Docker** + **docker-compose** per Postgres + Redis + API
@@ -126,7 +127,7 @@ Pastaj hap ne shfletues:
 |--------------------|------------------------------------------------------|
 | `npm run dev`      | Starton API-n (auto-reload)                          |
 | `npm start`        | Starton API-n ne production mode                     |
-| `npm test`         | Ekzekuton 24 testet (Jest)                          |
+| `npm test`         | Ekzekuton 116 testet (Jest)                         |
 | `npm run setup`    | Setup i plote: Postgres + migrime + seed             |
 | `npm run db:up`    | Vetem starton Postgres ne Docker                     |
 | `npm run db:down`  | Ndal Postgres                                        |
@@ -228,7 +229,7 @@ DATABASE_URL="postgresql://library:library@localhost:5434/library_test_db?schema
 npm test
 ```
 
-Ka 4 test suite (24 teste): 2 njesie + 2 integrimi (auth + loans).
+Ka 13 test suite (116 teste): 5 njesie (ApiError, jwt, audit log, books/authors/categories service) + 8 integrimi (auth, MFA, loans, books, authors, categories, members).
 
 ## Docker & deployment
 
@@ -259,13 +260,13 @@ Triggers: `push` & `pull_request` ne `main` ose `develop`.
 | Seksioni i kerkesave           | Implementimi ne kete projekt                    |
 |---------------------------------|--------------------------------------------------|
 | 1. Arkitektura (REST, stateless)| Express + JWT (stateless), `/api/v1` versionim   |
-| 2. Siguria (JWT, RBAC, helmet, MFA) | `auth.middleware.js`, `helmet`, rate limit, CORS, MFA (TOTP) |
+| 2. Siguria (JWT, RBAC, helmet, MFA, audit) | `auth.middleware.js`, `helmet`, rate limit, CORS, MFA (TOTP), audit log (`logs/audit.log`) |
 | 3. Performanca (caching)        | Redis caching per liste, paginim, indekse Prisma, rate limit |
 | 4. Dokumentimi (OpenAPI)        | Swagger UI ne `/api/docs` (OAS 3.0.3)            |
 | 5. Versionimi                   | URL prefix `/api/v1`                             |
 | 6. Logim & monitoring           | Winston + morgan, logs/ folder                   |
 | 7. Integrimi DB                 | Prisma ORM + PostgreSQL                          |
-| 8. Standardet (SOLID, teste)    | Layered (routes/controllers/services), Jest     |
+| 8. Standardet (SOLID, teste, ESLint) | Layered (routes/controllers/services), ESLint (flat config) + Prettier, 116 teste Jest (njesi + integrim) |
 | 9. Platformat                   | Node.js + Express + PostgreSQL + Redis           |
 | 10. DevOps (Docker, CI/CD)      | Dockerfile, docker-compose, GitHub Actions       |
 

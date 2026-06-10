@@ -65,7 +65,7 @@ describe('Loan flow', () => {
   });
 
   test('borrowing when no copies available fails with 409', async () => {
-    const fresh = await prisma.user.create({
+    await prisma.user.create({
       data: {
         email: 'm2@t.com',
         password: await bcrypt.hash('pass1234', 4),

@@ -1,6 +1,6 @@
 const request = require('supertest');
 const app = require('../../src/app');
-const { resetDatabase, disconnect, prisma } = require('../helpers/db');
+const { resetDatabase, disconnect } = require('../helpers/db');
 
 describe('Auth endpoints', () => {
   beforeAll(async () => {

@@ -76,7 +76,7 @@ async function refreshTokens({ refreshToken }) {
 
 function sanitize(user) {
   if (!user) return user;
-  const { password, mfaSecret, ...rest } = user;
+  const { password: _password, mfaSecret: _mfaSecret, ...rest } = user;
   return rest;
 }
 
